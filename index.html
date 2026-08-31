@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CXP-2032 Promo Carousel — Before / After</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { interpolate-size: allow-keywords; }
+
+    html.theme-dark {
+      --bg: #0A0A0A; --surface: #141414; --surface-hover: #1C1C1C;
+      --border: rgba(255,255,255,0.04);
+      --text: #EDEDED; --text-secondary: #888;
+      --accent: #2C8435; --accent-secondary: #FAD000;
+      --positive: #10b981; --negative: #f43f5e; --warning: #f59e0b;
+    }
+    html.theme-light {
+      --bg: #FAFAF9; --surface: #FFFFFF; --surface-hover: #F5F5F4;
+      --border: rgba(0,0,0,0.06);
+      --text: #0f172a; --text-secondary: #64748b;
+      --accent: #2C8435; --accent-secondary: #896806;
+      --positive: #059669; --negative: #e11d48; --warning: #d97706;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+      letter-spacing: -0.01em; font-feature-settings: 'cv11', 'ss01';
+      transition: background 0.3s, color 0.3s;
+      scrollbar-gutter: stable;
+    }
+    h1,h2,h3,h4,h5,h6 { color: var(--text); letter-spacing: -0.03em; line-height: 1.08; text-wrap: balance; }
+    h1 { font-weight: 700; font-size: clamp(2.5rem, 1.9rem + 3vw, 4rem); }
+    h2 { font-weight: 600; font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem); }
+    h3 { font-weight: 600; font-size: clamp(1.25rem, 1.1rem + 0.7vw, 1.5rem); }
+    body, p, li, td, th, span, label { font-weight: 400; }
+    p,li,td,th,span,label { color: var(--text); }
+    .text-secondary { color: var(--text-secondary); }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px;
+      transition: box-shadow 0.2s ease;
+    }
+    .card:hover { box-shadow: 0 0 0 1px var(--border), 0 8px 16px rgba(0,0,0,0.08); }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate { animation: fadeInUp 0.6s ease-out both; }
+    .animate.delay-1 { animation-delay: 0.1s; }
+    .animate.delay-2 { animation-delay: 0.2s; }
+    .animate.delay-3 { animation-delay: 0.3s; }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .reveal { opacity: 1; transform: none; }
+    }
+
+    @media print {
+      body { background: white !important; color: black !important; }
+      .viz-menu, .reveal { display: revert; opacity: 1 !important; transform: none !important; }
+      .card { break-inside: avoid; border: 1px solid #ddd; box-shadow: none; }
+      * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .compare-table { font-size: 11px; }
+    }
+    @page { margin: 0.6in; @bottom-center { content: "Page " counter(page); font-size: 9pt; color: #666; } }
+
+    .viz-menu { position: fixed; top: 16px; right: 16px; z-index: 9999; }
+    .viz-menu-toggle {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(12px); transition: all 0.2s;
+    }
+    .viz-menu-toggle:hover { background: var(--surface-hover); }
+    .viz-menu-dropdown {
+      position: absolute; top: 52px; right: 0; min-width: 200px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 8px;
+      opacity: 0; visibility: hidden; transform: translateY(-8px);
+      transition: all 0.2s; backdrop-filter: blur(16px);
+    }
+    .viz-menu-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .viz-menu-dropdown button {
+      width: 100%; padding: 10px 14px; border: none; border-radius: 8px;
+      background: transparent; color: var(--text); font-size: 14px;
+      font-family: inherit; cursor: pointer; text-align: left;
+      display: flex; align-items: center; gap: 10px; transition: background 0.15s;
+    }
+    .viz-menu-dropdown button:hover { background: var(--surface-hover); }
+    .menu-icon { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--text-secondary); }
+    .menu-icon svg { width: 16px; height: 16px; }
+
+    .skip-to-content {
+      position: absolute; top: -40px; left: 6px; background: var(--accent);
+      color: white; padding: 8px 12px; text-decoration: none;
+      border-radius: 4px; opacity: 0; pointer-events: none;
+      transition: all 0.2s; z-index: 10000;
+    }
+    .skip-to-content:focus { top: 6px; opacity: 1; pointer-events: auto; }
+
+    details { overflow: hidden; }
+    details summary { cursor: pointer; list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+    ::details-content {
+      transition: block-size 0.3s ease, opacity 0.3s ease;
+      block-size: 0; opacity: 0; overflow: hidden;
+    }
+    details[open]::details-content { block-size: auto; opacity: 1; }
+
+    .wrap { max-width: 1440px; margin: 0 auto; padding: 72px 32px 120px; }
+    .kicker { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .lede { font-size: 1.125rem; max-width: 760px; color: var(--text-secondary); margin-top: 16px; }
+    section { margin-top: 72px; }
+    .section-head { margin-bottom: 28px; }
+    .section-head p { margin-top: 8px; max-width: 760px; }
+
+    .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 24px; }
+    .flow-step {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+    }
+    .flow-step strong { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .flow-step p { font-size: 13px; color: var(--text-secondary); }
+    .flow-step .n { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.06em; }
+
+    .map-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .map-table th, .map-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .map-table th { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+    .swatch {
+      display: inline-block; width: 28px; height: 18px; border-radius: 4px;
+      border: 1px solid rgba(0,0,0,0.12); vertical-align: middle; margin-right: 8px;
+    }
+    .pill {
+      display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+      border-radius: 999px; background: var(--surface-hover); color: var(--text-secondary);
+    }
+    .pill.same { color: var(--text-secondary); }
+    .pill.changed { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+
+    .callout {
+      border-left: 3px solid var(--warning); padding: 16px 18px; background: var(--surface);
+      border-radius: 0 12px 12px 0; margin: 20px 0;
+    }
+    .callout h3 { font-size: 16px; margin-bottom: 6px; }
+    .callout p { font-size: 14px; color: var(--text-secondary); }
+
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 24px; }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .stat .v { font-size: 32px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
+    .stat .l { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+
+    .phone-frame {
+      width: 360px; background: #F6F6F7; border-radius: 16px; padding: 16px 0 12px;
+      position: relative;
+    }
+    .phone-frame.dark-home { background: #000; }
+    .phone-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--text-secondary); margin-bottom: 8px;
+    }
+
+    .promo-card { position: relative; overflow: hidden; display: flex; align-items: stretch; }
+    .promo-card.legacy {
+      height: 156px; border-radius: 8px; border: 1px solid transparent;
+    }
+    .promo-card.dsv2 {
+      height: 161px; border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .promo-copy {
+      flex: 1; display: flex; flex-direction: column; justify-content: center;
+      padding: 16px 8px 16px 20px; min-width: 0; gap: 8px;
+    }
+    .promo-copy.dsv2 { padding: 12px 4px 12px 16px; gap: 10px; }
+    .promo-label {
+      display: inline-block; align-self: flex-start;
+      font-size: 11px; font-weight: 700; color: #2E40D9; letter-spacing: -0.01em;
+    }
+    .promo-title { font-size: 16px; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; }
+    .promo-title.dsv2 { font-size: 17px; }
+    .cta {
+      align-self: flex-start; font-size: 12px; font-weight: 600;
+      padding: 7px 12px; border-radius: 999px; border: 1px solid currentColor;
+      background: transparent; line-height: 1;
+    }
+    .cta.dsv2 {
+      border: none; background: #1D1E21; color: #fff; border-radius: 8px;
+      padding: 6px 10px; font-size: 11px;
+    }
+    .cta.dsv2.dark { background: #fff; color: #1D1E21; }
+    .illust {
+      width: 100px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    }
+    .illust svg { width: 72px; height: 72px; }
+    .illust.dsv2 { width: 100px; align-items: flex-end; padding-bottom: 8px; }
+    .illust.dsv2 svg { width: 84px; height: 84px; }
+
+    .skel { background: #ECEEEE; border-radius: 999px; }
+    .skel-circle { width: 65px; height: 65px; border-radius: 50%; background: #ECEEEE; }
+    .phone-frame.dark-home .skel, .phone-frame.dark-home .skel-circle { background: #43464C; }
+
+    .dots { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: #C3C4CA; }
+    .dot.on { background: #565760; }
+    .lines { display: flex; gap: 8px; justify-content: flex-start; padding: 10px 16px 0; }
+    .line { height: 3px; border-radius: 999px; background: #A5A7AF; }
+    .line.on { width: 19px; background: #565760; }
+    .line.off { width: 5px; }
+    .phone-frame.dark-home .line { background: #6B6D78; }
+    .phone-frame.dark-home .line.on { background: #E1E2E4; }
+
+    .peek-row { display: flex; gap: 4px; overflow: hidden; padding: 0 16px; }
+    .peek-row .promo-card { flex: 0 0 78%; }
+
+    .empty-slot {
+      height: 80px; display: flex; align-items: center; justify-content: center;
+      border: 1px dashed rgba(0,0,0,0.15); border-radius: 8px; margin: 0 16px;
+      font-size: 12px; color: #878994;
+    }
+    .phone-frame.dark-home .empty-slot { border-color: rgba(255,255,255,0.2); color: #A5A7AF; }
+
+    .compare-details {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 8px 8px 24px;
+    }
+    .compare-details > summary {
+      padding: 16px 20px; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px;
+    }
+    .compare-details > summary::before {
+      content: ''; width: 8px; height: 8px; border-right: 2px solid var(--text); border-bottom: 2px solid var(--text);
+      transform: rotate(-45deg); margin-top: -4px; transition: transform 0.2s;
+    }
+    .compare-details[open] > summary::before { transform: rotate(45deg); margin-top: 2px; }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px 16px; }
+    .filters button {
+      font-family: inherit; font-size: 13px; font-weight: 500; padding: 6px 12px;
+      border-radius: 999px; border: 1px solid var(--border); background: transparent;
+      color: var(--text); cursor: pointer;
+    }
+    .filters button[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+    .compare-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .compare-table th {
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--text-secondary); padding: 8px 10px 16px; text-align: left; position: sticky; top: 0;
+      background: var(--surface); z-index: 1;
+    }
+    .compare-table td { padding: 14px 10px; vertical-align: top; border-top: 1px solid var(--border); }
+    .compare-table .state-cell { width: 160px; }
+    .compare-table .state-cell strong { display: block; font-size: 13px; font-weight: 600; }
+    .compare-table .state-cell span { font-size: 12px; color: var(--text-secondary); }
+    .shot { width: 360px; }
+    .hidden-row { display: none; }
+
+    .layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .layout-grid h3 { font-size: 15px; margin-bottom: 12px; }
+
+    @media (max-width: 1100px) {
+      .flow, .stat-row, .layout-grid { grid-template-columns: 1fr 1fr; }
+      .shot, .phone-frame { width: 300px; }
+      .compare-table .shot { transform: scale(0.82); transform-origin: top left; width: 300px; }
+    }
+    @media (max-width: 720px) {
+      .wrap { padding: 48px 16px 80px; }
+      .flow, .stat-row, .layout-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-to-content">Skip to content</a>
+
+  <div class="viz-menu">
+    <button class="viz-menu-toggle" onclick="toggleMenu()" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="5" x2="17" y2="5"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/>
+      </svg>
+    </button>
+    <div class="viz-menu-dropdown" id="vizMenuDropdown">
+      <button onclick="cycleTheme()"><span class="menu-icon" id="themeIcon"></span><span id="themeLabel">Light</span></button>
+      <button onclick="downloadImage()"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span><span>Download PNG</span></button>
+      <button onclick="window.print()"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></span><span>Print / PDF</span></button>
+    </div>
+  </div>
+
+  <main id="main-content" role="main">
+    <div class="wrap">
+      <header class="animate">
+        <div class="kicker">CXP-2032 · PR 27095 · Android</div>
+        <h1>Promo carousel color parity</h1>
+        <p class="lede">DSV2 home promo cards now resolve the backend <code>color-scheme</code> the same way legacy does. These are faithful mockups from <code>design_system</code> 2.8.1 <code>Global.color.*</code> tokens — not device captures. Legacy visuals are unchanged by this PR. The comparison table starts expanded.</p>
+      </header>
+
+      <div class="stat-row animate delay-1">
+        <div class="stat"><div class="v" data-count="7">0</div><div class="l">DSPromoCard.Variant values</div></div>
+        <div class="stat"><div class="v" data-count="8">0</div><div class="l">BE color-scheme strings</div></div>
+        <div class="stat"><div class="v">0</div><div class="l">Legacy visual change</div></div>
+        <div class="stat"><div class="v">1</div><div class="l">DSV2 field now consumed</div></div>
+      </div>
+
+      <section class="animate delay-2">
+        <div class="section-head">
+          <h2>How the carousel works</h2>
+          <p class="text-secondary">One <code>PromotionCarouselCardProvider</code> and one <code>PromotionCarouselCardModel</code>. <code>LevelUpCardFactory</code> picks the ViewHolder from <code>cxp-home-tiles-restyle</code> → <code>promo_enabled</code>. This PR only changes the DSV2 tile background.</p>
+        </div>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="n">01</div>
+            <strong>Placement load</strong>
+            <p>Provider fetches <code>HomeScreenCard</code> promotions. Each item carries <code>HomeScreenCardLayoutAttributes.colorScheme</code>.</p>
+          </div>
+          <div class="flow-step">
+            <div class="n">02</div>
+            <strong>Shared mapper</strong>
+            <p><code>PromoCardColorSchemeMapper</code> maps the BE string to <code>DSPromoCard.Variant</code>. Unknown / empty → yellow.</p>
+          </div>
+          <div class="flow-step">
+            <div class="n">03</div>
+            <strong>Legacy render</strong>
+            <p><code>DS.Theme</code> (light-locked) → <code>DS.PromoCard</code> with label + content + outlined CTA. Always color-aware.</p>
+          </div>
+          <div class="flow-step">
+            <div class="n">04</div>
+            <strong>DSV2 render</strong>
+            <p><code>TileContainer</code>. Before: <code>bg.elevated</code>. After: mapped <code>Global.color.*</code>. Loading stays elevated.</p>
+          </div>
+        </div>
+      </section>
+
+      <section data-reveal>
+        <div class="section-head">
+          <h2>BE color-scheme map</h2>
+          <p class="text-secondary">Exact hex from Android <code>GlobalTokens.kt</code> (<code>design_system</code> 2.8.1). White and inverse share a color. Dark maps to <code>neutral.1000</code>. DSV2 has no purple or coral brand token — both paths use these legacy tints.</p>
+        </div>
+        <div class="card" style="overflow-x:auto;">
+          <table class="map-table">
+            <thead>
+              <tr>
+                <th>BE value</th>
+                <th>Variant</th>
+                <th>Background</th>
+                <th>Border (legacy only)</th>
+                <th>Text (legacy)</th>
+                <th>DSV2 before</th>
+                <th>DSV2 after</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>yellow</code></td><td>Yellow</td><td><span class="swatch" style="background:#FFFADF"></span>#FFFADF</td><td>#FFF3AF</td><td>near-black</td><td>elevated</td><td><span class="pill changed">now yellow</span></td></tr>
+              <tr><td><code>green</code></td><td>Green</td><td><span class="swatch" style="background:#EDFEEF"></span>#EDFEEF</td><td>#B7ECBD</td><td>near-black</td><td>elevated</td><td><span class="pill changed">now green</span></td></tr>
+              <tr><td><code>blue</code></td><td>Blue</td><td><span class="swatch" style="background:#EBF0FF"></span>#EBF0FF</td><td>#B3C6FD</td><td>near-black</td><td>elevated</td><td><span class="pill changed">now blue</span></td></tr>
+              <tr><td><code>purple</code></td><td>Purple</td><td><span class="swatch" style="background:#F4E8FE"></span>#F4E8FE</td><td>#D5C2FE</td><td>near-black</td><td>elevated</td><td><span class="pill changed">now purple</span></td></tr>
+              <tr><td><code>coral</code></td><td>Coral</td><td><span class="swatch" style="background:#FEE8E7"></span>#FEE8E7</td><td>#F9C8C6</td><td>near-black</td><td>elevated</td><td><span class="pill changed">now coral</span></td></tr>
+              <tr><td><code>white</code> / <code>inverse</code></td><td>White</td><td><span class="swatch" style="background:#FFFFFF;border-color:#ccc"></span>#FFFFFF @ 98%</td><td>#E1E2E4</td><td>near-black</td><td>elevated</td><td><span class="pill same">same white</span></td></tr>
+              <tr><td><code>dark</code></td><td>Dark</td><td><span class="swatch" style="background:#1D1E21"></span>#1D1E21</td><td>fg.secondary</td><td>inverse white</td><td>elevated</td><td><span class="pill changed">now dark</span></td></tr>
+              <tr><td>unknown / empty</td><td>Yellow</td><td><span class="swatch" style="background:#FFFADF"></span>#FFFADF</td><td>#FFF3AF</td><td>near-black</td><td>elevated</td><td><span class="pill changed">fallback yellow</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout">
+          <h3>Android has no NativePromoCard path</h3>
+          <p>Unlike iOS, Android never hardcodes green for badge or strikethrough. Every loaded home-card promotion goes through <code>DS.PromoCard</code> (legacy) or <code>TileContainer</code> (DSV2). DSV2 also drops the optional product label and uses <code>attributes.content</code> as the title.</p>
+        </div>
+      </section>
+
+      <section data-reveal>
+        <div class="section-head">
+          <h2>Layout states</h2>
+          <p class="text-secondary">Shared model: Hidden / Empty / Loading / Content. Empty renders nothing. Loading stays on elevated / white and is unchanged. Legacy loading is a single skeleton; DSV2 loading is two peeking skeletons.</p>
+        </div>
+        <div class="layout-grid" id="layoutGrid"></div>
+      </section>
+
+      <section data-reveal>
+        <div class="section-head">
+          <h2>Before / after — every content state × color</h2>
+          <p class="text-secondary">Legacy before and after are identical (mapper extract only). DSV2 before is always <code>bg.elevated</code> (#FFFFFF light / #000 dark). DSV2 after uses the mapped tint. Filter hides rows only — the table stays open.</p>
+        </div>
+
+        <details class="compare-details" id="compareTable" open>
+          <summary>Before / after comparison table</summary>
+          <div class="filters" id="filters" role="group" aria-label="Filter states"></div>
+          <div style="overflow-x:auto; padding: 0 8px;">
+            <table class="compare-table">
+              <thead>
+                <tr>
+                  <th>State</th>
+                  <th>Legacy before = after</th>
+                  <th>DSV2 before</th>
+                  <th>DSV2 after</th>
+                </tr>
+              </thead>
+              <tbody id="compareBody"></tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <section data-reveal>
+        <div class="section-head">
+          <h2>Dark appearance — DSV2 only</h2>
+          <p class="text-secondary">Legacy <code>DS.Theme { }</code> is light-locked. DSV2 ViewHolder uses <code>DSV2.Theme(enableDarkMode = true)</code>, so title / CTA stay theme-aware. After this PR a pale yellow tile can sit under white dark-mode title text. Loading still uses elevated (black in dark).</p>
+        </div>
+        <div class="layout-grid" id="darkGrid"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    function toggleMenu() {
+      var dropdown = document.getElementById('vizMenuDropdown') || document.getElementById('vizMenu');
+      if (dropdown) dropdown.classList.toggle('open');
+    }
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.viz-menu')) {
+        var dropdown = document.getElementById('vizMenuDropdown') || document.getElementById('vizMenu');
+        if (dropdown) dropdown.classList.remove('open');
+      }
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        var dropdown = document.getElementById('vizMenuDropdown') || document.getElementById('vizMenu');
+        if (dropdown) dropdown.classList.remove('open');
+      }
+    });
+
+    var MOON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    var SUN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+    var savedTheme = null;
+    try { savedTheme = localStorage.getItem('viz-theme'); } catch(e) {}
+    var currentTheme = savedTheme || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    function applyTheme(t) {
+      document.documentElement.className = 'theme-' + t;
+      document.getElementById('themeIcon').innerHTML = t === 'dark' ? MOON_SVG : SUN_SVG;
+      document.getElementById('themeLabel').textContent = t === 'dark' ? 'Dark' : 'Light';
+      try { localStorage.setItem('viz-theme', t); } catch(e) {}
+      currentTheme = t;
+      if (typeof onThemeChange === 'function') onThemeChange();
+    }
+    function cycleTheme() { applyTheme(currentTheme === 'dark' ? 'light' : 'dark'); }
+    applyTheme(currentTheme);
+
+    document.querySelectorAll('[data-reveal]').forEach(function(el) { el.classList.add('reveal'); });
+    var revealObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add('visible'); revealObserver.unobserve(e.target); } });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(function(el) { revealObserver.observe(el); });
+
+    function animateCounters() {
+      document.querySelectorAll('[data-count]').forEach(function(el) {
+        if (el.dataset.counted) return;
+        el.dataset.counted = '1';
+        var target = parseFloat(el.dataset.count), prefix = el.dataset.prefix || '', suffix = el.dataset.suffix || '';
+        var start = performance.now(), duration = 1200;
+        (function tick(now) {
+          var p = Math.min((now - start) / duration, 1), eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = prefix + Math.round(target * eased).toLocaleString() + suffix;
+          if (p < 1) requestAnimationFrame(tick);
+        })(start);
+      });
+    }
+    var counterEl = document.querySelector('[data-count]');
+    if (counterEl) {
+      var cObs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) { if (e.isIntersecting) { animateCounters(); cObs.disconnect(); } });
+      }, { threshold: 0.3 });
+      cObs.observe(counterEl);
+    }
+
+    async function downloadImage() {
+      if (typeof htmlToImage === 'undefined') {
+        alert('Download feature unavailable (library failed to load)');
+        return;
+      }
+      var menu = document.querySelector('.viz-menu');
+      menu.style.display = 'none';
+      try {
+        var url = await htmlToImage.toPng(document.body, { quality: 1, pixelRatio: 2, filter: function(n) { return !n.classList || !n.classList.contains('viz-menu'); } });
+        var a = document.createElement('a'); a.href = url;
+        a.download = document.title.replace(/\s+/g, '-').toLowerCase() + '.png'; a.click();
+      } catch(e) { console.error('Download failed:', e); }
+      menu.style.display = '';
+    }
+
+    function onThemeChange() {}
+
+    var COLORS = {
+      yellow: { key: 'yellow', be: 'yellow', bg: '#FFFADF', border: '#FFF3AF', text: '#1D1E21' },
+      green:  { key: 'green',  be: 'green',  bg: '#EDFEEF', border: '#B7ECBD', text: '#1D1E21' },
+      blue:   { key: 'blue',   be: 'blue',   bg: '#EBF0FF', border: '#B3C6FD', text: '#1D1E21' },
+      purple: { key: 'purple', be: 'purple', bg: '#F4E8FE', border: '#D5C2FE', text: '#1D1E21' },
+      coral:  { key: 'coral',  be: 'coral',  bg: '#FEE8E7', border: '#F9C8C6', text: '#1D1E21' },
+      white:  { key: 'white',  be: 'white / inverse', bg: '#FFFFFF', border: '#E1E2E4', text: '#1D1E21' },
+      dark:   { key: 'dark',   be: 'dark',   bg: '#1D1E21', border: '#6B6D78', text: '#FFFFFF' }
+    };
+    var COLOR_ORDER = ['yellow', 'green', 'blue', 'purple', 'coral', 'white', 'dark'];
+
+    var ILLUST = '<svg viewBox="0 0 80 80" fill="none" aria-hidden="true"><circle cx="40" cy="40" r="28" fill="#FFE33B"/><circle cx="40" cy="40" r="18" fill="#FAD000"/><text x="40" y="46" text-anchor="middle" font-size="18" font-weight="800" fill="#1D1E21" font-family="Inter,sans-serif">$</text></svg>';
+
+    function cardInner(opts) {
+      var dsv2 = opts.dsv2;
+      var dark = opts.dark;
+      var label = dsv2 ? '' : '<div class="promo-label">Cash rewards</div>';
+      var ctaCls = 'cta' + (dsv2 ? ' dsv2' : '') + (dsv2 && dark ? ' dark' : '');
+      return '<div class="promo-copy' + (dsv2 ? ' dsv2' : '') + '">' +
+        label +
+        '<div class="promo-title' + (dsv2 ? ' dsv2' : '') + '">Earn cash rewards playing games</div>' +
+        '<div class="' + ctaCls + '">Start earning now</div>' +
+        '</div><div class="illust' + (dsv2 ? ' dsv2' : '') + '">' + ILLUST + '</div>';
+    }
+
+    function loadingInner(dsv2) {
+      return '<div class="promo-copy' + (dsv2 ? ' dsv2' : '') + '" style="gap:10px;">' +
+        '<div class="skel" style="width:101px;height:12px;"></div>' +
+        '<div class="skel" style="width:100%;height:12px;"></div>' +
+        '<div class="skel" style="width:100%;height:12px;"></div>' +
+        '<div class="skel" style="width:115px;height:24px;margin-top:6px;"></div>' +
+        '</div><div class="illust"><div class="skel-circle"></div></div>';
+    }
+
+    function legacyCard(colorKey, kind) {
+      var c = COLORS[colorKey];
+      if (kind === 'loading') {
+        return '<div class="promo-card legacy" style="background:#FFFFFF;border-color:#E1E2E4;margin:0 16px;">' + loadingInner(false) + '</div>';
+      }
+      return '<div class="promo-card legacy" style="background:' + c.bg + ';border-color:' + c.border + ';color:' + c.text + ';">' +
+        cardInner({ dsv2: false, dark: false }) + '</div>';
+    }
+
+    function dsv2Card(colorKey, kind, phase, dark) {
+      var elevated = dark ? '#000000' : '#FFFFFF';
+      var title = dark ? '#FFFFFF' : '#1D1E21';
+      var bg = elevated;
+      if (phase === 'after' && kind !== 'loading') {
+        bg = COLORS[colorKey].bg;
+      }
+      var inner = kind === 'loading' ? loadingInner(true) : cardInner({ dsv2: true, dark: dark });
+      return '<div class="promo-card dsv2" style="background:' + bg + ';color:' + title + ';">' + inner + '</div>';
+    }
+
+    function frame(inner, dark, extras) {
+      return '<div class="phone-frame' + (dark ? ' dark-home' : '') + '">' + inner + (extras || '') + '</div>';
+    }
+
+    function dotsHtml(count, on, dsv2) {
+      if (count <= 1) return '';
+      if (dsv2) {
+        var html = '<div class="lines">';
+        var i;
+        for (i = 0; i < count; i++) html += '<div class="line ' + (i === on ? 'on' : 'off') + '"></div>';
+        return html + '</div>';
+      }
+      var d = '<div class="dots">';
+      var j;
+      for (j = 0; j < count; j++) d += '<div class="dot' + (j === on ? ' on' : '') + '"></div>';
+      return d + '</div>';
+    }
+
+    function shot(html, label) {
+      return '<div class="shot"><div class="phone-label">' + label + '</div>' + html + '</div>';
+    }
+
+    var FILTERS = [
+      { id: 'all', label: 'All' },
+      { id: 'default', label: 'Loaded colors' },
+      { id: 'fallback', label: 'Unknown fallback' },
+      { id: 'loading', label: 'Loading' },
+      { id: 'empty', label: 'Empty / hidden' },
+      { id: 'unsupported', label: 'Unsupported slot' },
+      { id: 'multi', label: 'Multi-card' },
+      { id: 'dark', label: 'DSV2 dark' }
+    ];
+
+    function row(filter, stateLabel, note, a, b, c) {
+      return '<tr data-filter="' + filter + '">' +
+        '<td class="state-cell"><strong>' + stateLabel + '</strong><span>' + note + '</span></td>' +
+        '<td>' + a + '</td><td>' + b + '</td><td>' + c + '</td></tr>';
+    }
+
+    function buildCompare() {
+      var html = '';
+      var i, key, c;
+
+      html += row('loading', 'Loading', 'Legacy: 1 skeleton. DSV2: 2 peeking skeletons. Both stay elevated / white.',
+        shot(frame(legacyCard('yellow', 'loading')), 'Legacy — single skeleton'),
+        shot(frame('<div class="peek-row">' + dsv2Card('yellow', 'loading', 'before', false) + dsv2Card('yellow', 'loading', 'before', false) + '</div>' + dotsHtml(2, 0, true)), 'DSV2 before'),
+        shot(frame('<div class="peek-row">' + dsv2Card('yellow', 'loading', 'after', false) + dsv2Card('yellow', 'loading', 'after', false) + '</div>' + dotsHtml(2, 0, true)), 'DSV2 after — same'));
+
+      html += row('empty', 'Empty / hidden', 'Empty, Hidden, or carousel kill-switch. Renders nothing.',
+        shot(frame('<div class="empty-slot">no view</div>'), 'Legacy'),
+        shot(frame('<div class="empty-slot">no view</div>'), 'DSV2 before'),
+        shot(frame('<div class="empty-slot">no view</div>'), 'DSV2 after — same'));
+
+      html += row('unsupported', 'Unsupported pager slot', 'Cross-sell / non-home-card layout. Legacy skips. DSV2 keeps an empty Spacer so page indexes stay aligned.',
+        shot(frame('<div class="empty-slot">skipped page</div>'), 'Legacy — empty branch'),
+        shot(frame('<div class="empty-slot">empty Spacer</div>'), 'DSV2 before'),
+        shot(frame('<div class="empty-slot">empty Spacer</div>'), 'DSV2 after — same'));
+
+      for (i = 0; i < COLOR_ORDER.length; i++) {
+        key = COLOR_ORDER[i];
+        c = COLORS[key];
+        html += row('default', 'Loaded · ' + c.be, 'DS.PromoCard with label + outlined CTA. DSV2 drops the label.',
+          shot(frame(legacyCard(key, 'default')), 'Legacy ' + c.be),
+          shot(frame(dsv2Card(key, 'default', 'before', false)), 'Always elevated'),
+          shot(frame(dsv2Card(key, 'default', 'after', false)), 'Mapped ' + c.key));
+      }
+
+      html += row('fallback', 'Unknown / empty scheme', 'Mapper default → Yellow. Same fallback on both paths.',
+        shot(frame(legacyCard('yellow', 'default')), 'Legacy fallback yellow'),
+        shot(frame(dsv2Card('yellow', 'default', 'before', false)), 'Always elevated'),
+        shot(frame(dsv2Card('yellow', 'default', 'after', false)), 'After → yellow'));
+
+      html += row('multi', 'Multi-card peek', 'Each page keeps its own color-scheme. DSV2 before: all elevated.',
+        shot(frame('<div class="peek-row">' + legacyCard('blue', 'default') + legacyCard('green', 'default') + '</div>' + dotsHtml(3, 0, false)), 'Legacy mixed colors'),
+        shot(frame('<div class="peek-row">' + dsv2Card('blue', 'default', 'before', false) + dsv2Card('green', 'default', 'before', false) + '</div>' + dotsHtml(3, 0, true)), 'All elevated'),
+        shot(frame('<div class="peek-row">' + dsv2Card('blue', 'default', 'after', false) + dsv2Card('green', 'default', 'after', false) + '</div>' + dotsHtml(3, 0, true)), 'Per-page colors'));
+
+      for (i = 0; i < COLOR_ORDER.length; i++) {
+        key = COLOR_ORDER[i];
+        c = COLORS[key];
+        html += row('dark', 'DSV2 dark · ' + c.be, 'After: pale DS tint + dark-mode white title. Loading stays black elevated.',
+          shot(frame(legacyCard(key, 'default'), false), 'Legacy — light-locked'),
+          shot(frame(dsv2Card(key, 'default', 'before', true), true), 'Dark elevated #000'),
+          shot(frame(dsv2Card(key, 'default', 'after', true), true), 'Tint + white text'));
+      }
+
+      document.getElementById('compareBody').innerHTML = html;
+    }
+
+    function buildFilters() {
+      var box = document.getElementById('filters');
+      var html = '';
+      var i;
+      for (i = 0; i < FILTERS.length; i++) {
+        html += '<button type="button" data-id="' + FILTERS[i].id + '" aria-pressed="' + (FILTERS[i].id === 'all' ? 'true' : 'false') + '">' + FILTERS[i].label + '</button>';
+      }
+      box.innerHTML = html;
+      box.addEventListener('click', function(e) {
+        var btn = e.target.closest('button');
+        if (!btn) return;
+        var id = btn.getAttribute('data-id');
+        box.querySelectorAll('button').forEach(function(b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+        document.querySelectorAll('#compareBody tr').forEach(function(tr) {
+          tr.classList.toggle('hidden-row', id !== 'all' && tr.getAttribute('data-filter') !== id);
+        });
+      });
+    }
+
+    function buildLayouts() {
+      var legacyLoad = shot(frame(legacyCard('yellow', 'loading')), 'Legacy loading — 1 card');
+      var v2Load = shot(frame('<div class="peek-row">' + dsv2Card('yellow', 'loading', 'after', false) + dsv2Card('yellow', 'loading', 'after', false) + '</div>' + dotsHtml(2, 0, true)), 'DSV2 loading — unchanged');
+      var legacySingle = shot(frame(legacyCard('yellow', 'default')), 'Legacy single · yellow');
+      var v2Single = shot(frame(dsv2Card('yellow', 'default', 'after', false)), 'DSV2 single after · yellow');
+      document.getElementById('layoutGrid').innerHTML =
+        '<div><h3>Loading</h3>' + legacyLoad + v2Load + '</div>' +
+        '<div><h3>Single loaded page</h3>' + legacySingle + v2Single + '</div>';
+
+      document.getElementById('darkGrid').innerHTML =
+        '<div><h3>DSV2 before · dark</h3>' + shot(frame(dsv2Card('green', 'default', 'before', true), true), 'Elevated black, white type') + '</div>' +
+        '<div><h3>DSV2 after · dark + green</h3>' + shot(frame(dsv2Card('green', 'default', 'after', true), true), 'Pale green tile, white type') + '</div>' +
+        '<div><h3>DSV2 after · dark + dark scheme</h3>' + shot(frame(dsv2Card('dark', 'default', 'after', true), true), 'Black tile + white type — readable') + '</div>' +
+        '<div><h3>DSV2 after · dark + yellow</h3>' + shot(frame(dsv2Card('yellow', 'default', 'after', true), true), 'Pale yellow + white type — low contrast') + '</div>';
+    }
+
+    buildCompare();
+    buildFilters();
+    buildLayouts();
+  </script>
+</body>
+</html>
