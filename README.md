@@ -2,7 +2,7 @@
 
 Android emulator captures of production `PromotionCarouselContent` / `PromotionCarouselV2Content` for https://github.com/activehours/android/pull/27095
 
-Each row image is **Legacy | DSV2 before | DSV2 after**.
+Per-cell crops in `crop/` follow the same HTML grid as the iOS PR (rows = Legacy / DSV2 before / DSV2 after, columns = color).
 
 Pagination, peek, and gutters match production Compose (not the earlier HTML leftover that left-aligned DSV2 ticks):
 
