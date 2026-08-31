@@ -161,7 +161,7 @@
     .stat .l { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
 
     .phone-frame {
-      width: 360px; background: #F6F6F7; border-radius: 16px; padding: 16px 0 12px;
+      width: 393px; background: #F6F6F7; border-radius: 16px; padding: 8px 0 12px;
       position: relative;
     }
     .phone-frame.dark-home { background: #000; }
@@ -210,18 +210,22 @@
     .skel-circle { width: 65px; height: 65px; border-radius: 50%; background: #ECEEEE; }
     .phone-frame.dark-home .skel, .phone-frame.dark-home .skel-circle { background: #43464C; }
 
-    .dots { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: #C3C4CA; }
-    .dot.on { background: #565760; }
-    .lines { display: flex; gap: 8px; justify-content: flex-start; padding: 10px 16px 0; }
-    .line { height: 3px; border-radius: 999px; background: #A5A7AF; }
-    .line.on { width: 19px; background: #565760; }
-    .line.off { width: 5px; }
-    .phone-frame.dark-home .line { background: #6B6D78; }
-    .phone-frame.dark-home .line.on { background: #E1E2E4; }
-
-    .peek-row { display: flex; gap: 4px; overflow: hidden; padding: 0 16px; }
-    .peek-row .promo-card { flex: 0 0 78%; }
+    .indicators {
+      display: flex; justify-content: center; align-items: flex-end;
+      width: 100%;
+    }
+    .indicators.legacy { gap: 4px; height: 4px; margin-top: 8px; }
+    .indicators.dsv2 { gap: 8px; height: 10px; padding-bottom: 0.5px; }
+    .indicators.hidden { visibility: hidden; }
+    .tick { height: 3px; border-radius: 999px; flex-shrink: 0; }
+    .tick.legacy.on { width: 19px; background: rgba(0,0,0,0.68); }
+    .tick.legacy.off { width: 5px; background: rgba(0,0,0,0.24); }
+    .tick.dsv2.on { width: 19px; margin: 0 -1.5px; background: #52545C; }
+    .tick.dsv2.off { width: 5px; margin: 0 -1.5px; background: #ADB2B8; }
+    .phone-frame.dark-home .tick.dsv2.on { background: #DEE0E3; }
+    .phone-frame.dark-home .tick.dsv2.off { background: #7B818E; }
+    .peek-row { display: flex; gap: 4px; overflow: hidden; padding-left: 16px; }
+    .peek-row .promo-card { flex: 0 0 calc(100% - 40px); }
 
     .empty-slot {
       height: 80px; display: flex; align-items: center; justify-content: center;
@@ -260,7 +264,7 @@
     .compare-table .state-cell { width: 160px; }
     .compare-table .state-cell strong { display: block; font-size: 13px; font-weight: 600; }
     .compare-table .state-cell span { font-size: 12px; color: var(--text-secondary); }
-    .shot { width: 360px; }
+    .shot { width: 393px; }
     .hidden-row { display: none; }
 
     .layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -268,8 +272,8 @@
 
     @media (max-width: 1100px) {
       .flow, .stat-row, .layout-grid { grid-template-columns: 1fr 1fr; }
-      .shot, .phone-frame { width: 300px; }
-      .compare-table .shot { transform: scale(0.82); transform-origin: top left; width: 300px; }
+      .shot, .phone-frame { width: 320px; }
+      .compare-table .shot { transform: scale(0.78); transform-origin: top left; width: 320px; }
     }
     @media (max-width: 720px) {
       .wrap { padding: 48px 16px 80px; }
@@ -554,17 +558,21 @@
     }
 
     function dotsHtml(count, on, dsv2) {
-      if (count <= 1) return '';
-      if (dsv2) {
-        var html = '<div class="lines">';
-        var i;
-        for (i = 0; i < count; i++) html += '<div class="line ' + (i === on ? 'on' : 'off') + '"></div>';
-        return html + '</div>';
+      var cls = 'indicators ' + (dsv2 ? 'dsv2' : 'legacy');
+      var tick = 'tick ' + (dsv2 ? 'dsv2' : 'legacy');
+      var n = count < 1 ? 1 : count;
+      if (count <= 1) {
+        if (!dsv2) return '';
+        return '<div class="' + cls + ' hidden"><div class="' + tick + ' on"></div></div>';
       }
-      var d = '<div class="dots">';
-      var j;
-      for (j = 0; j < count; j++) d += '<div class="dot' + (j === on ? ' on' : '') + '"></div>';
-      return d + '</div>';
+      var html = '<div class="' + cls + '">';
+      var i;
+      for (i = 0; i < n; i++) html += '<div class="' + tick + ' ' + (i === on ? 'on' : 'off') + '"></div>';
+      return html + '</div>';
+    }
+
+    function dsv2Standalone(colorKey, kind, phase, dark) {
+      return frame(dsv2Card(colorKey, kind, phase, dark) + dotsHtml(1, 0, true), dark);
     }
 
     function shot(html, label) {
@@ -612,14 +620,14 @@
         c = COLORS[key];
         html += row('default', 'Loaded · ' + c.be, 'DS.PromoCard with label + outlined CTA. DSV2 drops the label.',
           shot(frame(legacyCard(key, 'default')), 'Legacy ' + c.be),
-          shot(frame(dsv2Card(key, 'default', 'before', false)), 'Always elevated'),
-          shot(frame(dsv2Card(key, 'default', 'after', false)), 'Mapped ' + c.key));
+          shot(dsv2Standalone(key, 'default', 'before', false), 'Always elevated'),
+          shot(dsv2Standalone(key, 'default', 'after', false), 'Mapped ' + c.key));
       }
 
       html += row('fallback', 'Unknown / empty scheme', 'Mapper default → Yellow. Same fallback on both paths.',
         shot(frame(legacyCard('yellow', 'default')), 'Legacy fallback yellow'),
-        shot(frame(dsv2Card('yellow', 'default', 'before', false)), 'Always elevated'),
-        shot(frame(dsv2Card('yellow', 'default', 'after', false)), 'After → yellow'));
+        shot(dsv2Standalone('yellow', 'default', 'before', false), 'Always elevated'),
+        shot(dsv2Standalone('yellow', 'default', 'after', false), 'After → yellow'));
 
       html += row('multi', 'Multi-card peek', 'Each page keeps its own color-scheme. DSV2 before: all elevated.',
         shot(frame('<div class="peek-row">' + legacyCard('blue', 'default') + legacyCard('green', 'default') + '</div>' + dotsHtml(3, 0, false)), 'Legacy mixed colors'),
@@ -631,8 +639,8 @@
         c = COLORS[key];
         html += row('dark', 'DSV2 dark · ' + c.be, 'After: pale DS tint + dark-mode white title. Loading stays black elevated.',
           shot(frame(legacyCard(key, 'default'), false), 'Legacy — light-locked'),
-          shot(frame(dsv2Card(key, 'default', 'before', true), true), 'Dark elevated #000'),
-          shot(frame(dsv2Card(key, 'default', 'after', true), true), 'Tint + white text'));
+          shot(dsv2Standalone(key, 'default', 'before', true), 'Dark elevated #000'),
+          shot(dsv2Standalone(key, 'default', 'after', true), 'Tint + white text'));
       }
 
       document.getElementById('compareBody').innerHTML = html;
@@ -661,16 +669,16 @@
       var legacyLoad = shot(frame(legacyCard('yellow', 'loading')), 'Legacy loading — 1 card');
       var v2Load = shot(frame('<div class="peek-row">' + dsv2Card('yellow', 'loading', 'after', false) + dsv2Card('yellow', 'loading', 'after', false) + '</div>' + dotsHtml(2, 0, true)), 'DSV2 loading — unchanged');
       var legacySingle = shot(frame(legacyCard('yellow', 'default')), 'Legacy single · yellow');
-      var v2Single = shot(frame(dsv2Card('yellow', 'default', 'after', false)), 'DSV2 single after · yellow');
+      var v2Single = shot(dsv2Standalone('yellow', 'default', 'after', false), 'DSV2 single after · yellow');
       document.getElementById('layoutGrid').innerHTML =
         '<div><h3>Loading</h3>' + legacyLoad + v2Load + '</div>' +
         '<div><h3>Single loaded page</h3>' + legacySingle + v2Single + '</div>';
 
       document.getElementById('darkGrid').innerHTML =
-        '<div><h3>DSV2 before · dark</h3>' + shot(frame(dsv2Card('green', 'default', 'before', true), true), 'Elevated black, white type') + '</div>' +
-        '<div><h3>DSV2 after · dark + green</h3>' + shot(frame(dsv2Card('green', 'default', 'after', true), true), 'Pale green tile, white type') + '</div>' +
-        '<div><h3>DSV2 after · dark + dark scheme</h3>' + shot(frame(dsv2Card('dark', 'default', 'after', true), true), 'Black tile + white type — readable') + '</div>' +
-        '<div><h3>DSV2 after · dark + yellow</h3>' + shot(frame(dsv2Card('yellow', 'default', 'after', true), true), 'Pale yellow + white type — low contrast') + '</div>';
+        '<div><h3>DSV2 before · dark</h3>' + shot(dsv2Standalone('green', 'default', 'before', true), 'Elevated black, white type') + '</div>' +
+        '<div><h3>DSV2 after · dark + green</h3>' + shot(dsv2Standalone('green', 'default', 'after', true), 'Pale green tile, white type') + '</div>' +
+        '<div><h3>DSV2 after · dark + dark scheme</h3>' + shot(dsv2Standalone('black', 'default', 'after', true), 'Black tile + white type — readable') + '</div>' +
+        '<div><h3>DSV2 after · dark + yellow</h3>' + shot(dsv2Standalone('yellow', 'default', 'after', true), 'Pale yellow + white type — low contrast') + '</div>';
     }
 
     buildCompare();
